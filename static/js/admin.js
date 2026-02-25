@@ -391,6 +391,8 @@ async function loadSettings() {
         // 自动注册配置
         document.getElementById('setting-auto-register-enabled').checked = settings.auto_register?.enabled ?? false;
         document.getElementById('setting-auto-register-cron').value = settings.auto_register?.cron || '';
+        document.getElementById('setting-task-history-limit').value = settings.auto_register?.task_history_limit || 10;
+        document.getElementById('setting-cleanup-expired-accounts-enabled').checked = settings.auto_register?.cleanup_expired_accounts_enabled ?? false;
 
         // 图片生成配置
         document.getElementById('setting-image-enabled').checked = settings.image_generation?.enabled ?? true;
@@ -461,7 +463,9 @@ async function saveSettings() {
             },
             auto_register: {
                 enabled: document.getElementById('setting-auto-register-enabled').checked,
-                cron: document.getElementById('setting-auto-register-cron').value.trim()
+                cron: document.getElementById('setting-auto-register-cron').value.trim(),
+                task_history_limit: parseInt(document.getElementById('setting-task-history-limit').value) || 10,
+                cleanup_expired_accounts_enabled: document.getElementById('setting-cleanup-expired-accounts-enabled').checked
             },
             image_generation: {
                 enabled: document.getElementById('setting-image-enabled').checked,

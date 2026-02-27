@@ -195,10 +195,10 @@ class LoginService:
 
             # 更新配置
             config_data = result["config"]
-            config = self._update_account_config(email, config_data)
+            updated_config = self._update_account_config(email, config_data)
 
             logger.info(f"✅ 登录刷新成功: {email}")
-            return {"email": email, "success": True, "config": config, "error": None}
+            return {"email": email, "success": True, "config": updated_config, "error": None}
 
         except Exception as e:
             logger.error(f"❌ 登录刷新异常 [{email}]: {e}")

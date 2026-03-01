@@ -171,24 +171,61 @@ async function enableAccount(accountId) {
     }
 }
 
+async function startLoginRefresh(accountIds, successMessage) {
+    const response = await fetch(`/${window.ADMIN_PATH}/login/start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(accountIds)
+    });
+
+    const result = await handleApiResponse(response);
+    alert(`${successMessage}\n任务ID: ${result.task.id}\n请在日志中查看进度。`);
+
+    // 启动轮询任务状态
+    startLoginPolling(result.task.id);
+}
+
 async function refreshAccount(accountId) {
     if (!confirm(`确定刷新账户 ${accountId} 的凭证？\n这将通过重新登录来获取新的凭证。`)) return;
 
     try {
-        const response = await fetch(`/${window.ADMIN_PATH}/login/start`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify([accountId])
-        });
-
-        const result = await handleApiResponse(response);
-        alert(`刷新任务已启动！\n任务ID: ${result.task.id}\n请在日志中查看进度。`);
-
-        // 启动轮询任务状态
-        startLoginPolling(result.task.id);
+        await startLoginRefresh([accountId], '刷新任务已启动！');
     } catch (error) {
         console.error('刷新失败:', error);
         alert('刷新失败: ' + error.message);
+    }
+}
+
+async function refreshExpiredAccounts() {
+    const expiredAccountIds = Array.from(document.querySelectorAll('tr[data-is-expired="true"][data-account-id]'))
+        .map(row => row.dataset.accountId)
+        .filter(Boolean);
+
+    if (expiredAccountIds.length === 0) {
+        alert('当前没有已过期账户可刷新');
+        return;
+    }
+
+    if (!confirm(`确定批量刷新 ${expiredAccountIds.length} 个已过期账户的凭证？\n这将通过重新登录来获取新的凭证。`)) {
+        return;
+    }
+
+    const refreshBtn = document.getElementById('refresh-expired-btn');
+    if (refreshBtn) {
+        refreshBtn.disabled = true;
+        refreshBtn.textContent = '⏳ 刷新中...';
+    }
+
+    try {
+        await startLoginRefresh(expiredAccountIds, `批量刷新任务已启动！\n账户数: ${expiredAccountIds.length}`);
+    } catch (error) {
+        console.error('批量刷新失败:', error);
+        alert('批量刷新失败: ' + error.message);
+    } finally {
+        if (refreshBtn) {
+            refreshBtn.disabled = false;
+            refreshBtn.textContent = '♻️ 批量刷新过期账户';
+        }
     }
 }
 
